@@ -16,6 +16,10 @@ interface PostProps {
   frontMatter: Record<string, any>;
 }
 
+type PostQueryParams = {
+  slug: string;
+};
+
 export default function PostPage({ source }: PostProps) {
   const content = hydrate(source, { components });
 
@@ -26,9 +30,11 @@ export default function PostPage({ source }: PostProps) {
   );
 }
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps<PostProps, PostQueryParams> = async ({ params }) => {
+  if (!params?.slug) throw Error("No slug provided!");
+
   const source = (
-    await promises.readFile(join(getDocsFolder("docs"), `${params!.slug}.mdx`))
+    await promises.readFile(join(getDocsFolder("docs"), `${params.slug}.mdx`))
   ).toString("utf-8");
 
   const { content, data } = matter(source);
@@ -51,7 +57,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   };
 };
 
-export const getStaticPaths: GetStaticPaths = async () => {
+export const getStaticPaths: GetStaticPaths<PostQueryParams> = async () => {
   const paths = (await getDocsPaths("docs"))
     .map((path) => path.replace(/\.mdx?$/, ""))
     .map((slug) => ({ params: { slug } }));
