@@ -1,3 +1,5 @@
+import "prism-themes/themes/prism-dracula.css";
+
 import { ChakraProvider } from "@chakra-ui/react";
 import { extendTheme } from "@chakra-ui/react";
 

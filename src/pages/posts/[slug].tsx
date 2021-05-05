@@ -1,69 +1,24 @@
-import { promises } from "fs";
-import matter from "gray-matter";
-import hydrate from "next-mdx-remote/hydrate";
-import renderToString from "next-mdx-remote/render-to-string";
-import { join } from "path";
-
 import { Stack } from "@chakra-ui/react";
 
-import { components } from "../../components/markdownComponents";
-import { getDocsFolder, getDocsPaths } from "../../utils/mdx";
+import { MDXPage } from "../../mdx/client";
+import { MDXPaths, MDXProps } from "../../mdx/server";
 
 import type { GetStaticPaths, GetStaticProps } from "next";
-import type { MdxRemote } from "next-mdx-remote/types";
-interface PostProps {
-  source: MdxRemote.Source;
-  frontMatter: Record<string, any>;
-}
 
-type PostQueryParams = {
-  slug: string;
-};
-
-export default function PostPage({ source }: PostProps) {
-  const content = hydrate(source, { components });
-
+export default MDXPage(function PostPage({ content }) {
   return (
     <Stack>
       <main>{content}</main>
     </Stack>
   );
-}
+});
 
-export const getStaticProps: GetStaticProps<PostProps, PostQueryParams> = async ({ params }) => {
-  if (!params?.slug) throw Error("No slug provided!");
-
-  const source = (
-    await promises.readFile(join(getDocsFolder("docs"), `${params.slug}.mdx`))
-  ).toString("utf-8");
-
-  const { content, data } = matter(source);
-
-  const mdxSource = await renderToString(content, {
-    components,
-    // Optionally pass remark/rehype plugins
-    mdxOptions: {
-      remarkPlugins: [],
-      rehypePlugins: [],
-    },
-    scope: data,
-  });
-
-  return {
-    props: {
-      source: mdxSource,
-      frontMatter: data,
-    },
-  };
+export const getStaticProps: GetStaticProps = async (ctx) => {
+  return MDXProps(({ getParam, readFile }) => {
+    return readFile(`docs/${getParam("slug")}.mdx`);
+  }, ctx);
 };
 
-export const getStaticPaths: GetStaticPaths<PostQueryParams> = async () => {
-  const paths = (await getDocsPaths("docs"))
-    .map((path) => path.replace(/\.mdx?$/, ""))
-    .map((slug) => ({ params: { slug } }));
-
-  return {
-    paths,
-    fallback: false,
-  };
+export const getStaticPaths: GetStaticPaths = async (ctx) => {
+  return MDXPaths("docs", ctx);
 };
