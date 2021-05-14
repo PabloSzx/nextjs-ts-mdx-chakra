@@ -17,5 +17,5 @@ To do a [`pnpm`](https://pnpm.io/) + [`Vercel`](https://vercel.com/) deployment 
 ![Vercel + PNPM Configuration](/public/vercel-pnpm.png) 
 
 ```bash
-npx pnpm install --store=node_modules/.pnpm-store
+npx pnpm install --store=node_modules/.pnpm-store --shamefully-hoist
 ```
